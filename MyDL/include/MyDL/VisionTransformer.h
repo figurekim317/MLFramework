@@ -32,6 +32,7 @@ private:
     std::shared_ptr<Linear> classifier_;
     int embed_dim_;
     int num_classes_;
+    int seq_len_;
 
 public:
     /**

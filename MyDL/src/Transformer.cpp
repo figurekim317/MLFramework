@@ -8,6 +8,19 @@
 namespace MyDL {
 
 /**
+ * Forward pass of PositionalEncoding.
+ * Adds positional encoding to the input sequence to retain order information.
+ * @param x Input tensor of shape [seq_len, embed_dim].
+ * @return Output tensor with positional encoding added.
+ */
+Tensor PositionalEncoding::forward(const Tensor& x) {
+    if (x.shape.size() != 2 || x.shape[0] != pos_encoding_.shape[0]) {
+        throw std::runtime_error("PositionalEncoding: Input shape mismatch!");
+    }
+    return F::add(x, pos_encoding_);
+}
+
+/**
  * Forward pass of MultiHeadAttention.
  * @param x Input tensor of shape [seq_len, embed_dim].
  * @return Output tensor after self-attention and projection.
@@ -72,12 +85,15 @@ Tensor TransformerBlock::forward(const Tensor& x) {
 
 /**
  * Forward pass of the Transformer model.
- * Applies multiple TransformerBlocks sequentially.
+ * Applies positional encoding followed by multiple TransformerBlocks sequentially.
  * @param x Input tensor.
  * @return Output tensor after all Transformer blocks.
  */
 Tensor TransformerModel::forward(const Tensor& x) {
-    Tensor out = x;
+    // Apply positional encoding before processing through Transformer blocks
+    Tensor out = pos_encoding_->forward(x);
+    
+    // Pass through Transformer blocks
     for (auto& block : blocks_) {
         out = block->forward(out);
     }
