@@ -2,85 +2,72 @@
 #define MYDL_FUNCTIONAL_H
 
 #include "Tensor.h"
-#include <algorithm>
 #include <cmath>
-#include <stdexcept>
 #include <vector>
+#include <algorithm>
+#include <stdexcept>
+#include <limits>
 
 namespace MyDL {
 namespace F {
 
-// 2D matmul: A=[N,M], B=[M,P] => C=[N,P]
-inline Tensor matmul(const Tensor& A, const Tensor& B) {
-    if (A.shape.size() != 2 || B.shape.size() != 2) {
-        throw std::runtime_error("matmul: only supports 2D Tensors");
-    }
-    int N = A.shape[0], M = A.shape[1];
-    int M2 = B.shape[0], P = B.shape[1];
-    if (M != M2) {
-        throw std::runtime_error("matmul: dimension mismatch");
-    }
+/**
+ * Functional Module for Basic Tensor Operations
+ * 
+ * The `Functional` module (`MyDL::F`) provides a collection of fundamental 
+ * operations commonly used in deep learning frameworks. These functions 
+ * perform essential mathematical computations on tensors, such as:
+ * 
+ * - **Matrix Multiplication (`matmul`)**: Computes the dot product of two 2D tensors.
+ * - **Element-wise Addition (`add`)**: Performs addition between two tensors of the same shape.
+ * - **Activation Functions**:
+ *   - **ReLU (`relu`)**: Applies the Rectified Linear Unit activation function.
+ *   - **Softmax (`softmax`)**: Converts values into probabilities along the last dimension.
+ * - **Tensor Manipulation**:
+ *   - **Transpose (`transpose`)**: Swaps the dimensions of a 2D tensor.
+ * 
+ * These functions are optimized for inference-only deep learning applications
+ * and serve as the core building blocks for operations inside `Module` layers 
+ * (such as `Linear`, `MultiHeadAttention`, `BatchNorm2d`, etc.).
+ */
 
-    Tensor C({N, P});
-    for (int i = 0; i < N; ++i) {
-        for (int j = 0; j < P; ++j) {
-            float sum = 0.0f;
-            for (int k = 0; k < M; ++k) {
-                sum += A.data[i*M + k] * B.data[k*P + j];
-            }
-            C.data[i*P + j] = sum;
-        }
-    }
-    return C;
-}
+/**
+ * Performs matrix multiplication between two 2D tensors.
+ * @param A First input tensor with shape [M, K].
+ * @param B Second input tensor with shape [K, N].
+ * @return Resulting tensor with shape [M, N].
+ */
+Tensor matmul(const Tensor& A, const Tensor& B);
 
-// element-wise add (same shape)
-inline Tensor add(const Tensor& A, const Tensor& B) {
-    if (A.size() != B.size()) {
-        throw std::runtime_error("add: size mismatch");
-    }
-    Tensor C = A;
-    for (size_t i = 0; i < C.size(); i++) {
-        C.data[i] += B.data[i];
-    }
-    return C;
-}
+/**
+ * Element-wise addition of two tensors.
+ * @param A First input tensor.
+ * @param B Second input tensor (must have the same shape as A).
+ * @return Tensor resulting from element-wise addition.
+ */
+Tensor add(const Tensor& A, const Tensor& B);
 
-// ReLU
-inline Tensor relu(const Tensor& x) {
-    Tensor y = x;
-    for (auto &v : y.data) {
-        if (v < 0.0f) v = 0.0f;
-    }
-    return y;
-}
+/**
+ * Applies the ReLU (Rectified Linear Unit) activation function element-wise.
+ * ReLU(x) = max(0, x)
+ * @param x Input tensor.
+ * @return Output tensor with ReLU applied.
+ */
+Tensor relu(const Tensor& x);
 
-// softmax (row-wise)
-inline Tensor softmax(const Tensor& x) {
-    // x shape: [N, dim]
-    if (x.shape.size() != 2) {
-        throw std::runtime_error("softmax: only supports 2D");
-    }
-    int N = x.shape[0];
-    int dim = x.shape[1];
-    Tensor y({N, dim});
+/**
+ * Applies softmax activation along the last dimension of the tensor.
+ * @param x Input tensor.
+ * @return Tensor with softmax applied.
+ */
+Tensor softmax(const Tensor& x);
 
-    for (int i = 0; i < N; i++) {
-        float maxVal = -1e30f;
-        for (int d = 0; d < dim; d++) {
-            float val = x.data[i*dim + d];
-            if (val > maxVal) maxVal = val;
-        }
-        float sumExp = 0.0f;
-        for (int d = 0; d < dim; d++) {
-            sumExp += std::exp(x.data[i*dim + d] - maxVal);
-        }
-        for (int d = 0; d < dim; d++) {
-            y.data[i*dim + d] = std::exp(x.data[i*dim + d] - maxVal) / sumExp;
-        }
-    }
-    return y;
-}
+/**
+ * Transposes a 2D tensor (matrix) by swapping its rows and columns.
+ * @param x Input tensor with shape [M, N].
+ * @return Transposed tensor with shape [N, M].
+ */
+Tensor transpose(const Tensor& x);
 
 } // namespace F
 } // namespace MyDL
