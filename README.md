@@ -1,12 +1,12 @@
 # MyDL Framework
 
 MyDL is a lightweight C++ framework for inference-only deep learning models.  
-Inspired by PyTorch’s modular design, MyDL provides a **Tensor** class, a **Module** base class (for layers/models), fundamental operations (`matmul`, `add`, `relu`, `softmax`, etc.), and modules for Transformers (VisionTransformer) and CNN-based architectures (such as ResNet, YOLO).  
+Inspired by PyTorch’s modular design, MyDL provides a **Tensor** class, a **Module** base class (for layers/models), fundamental operations (`matmul`, `add`, `relu`, `softmax`, etc.), and modules for Transformers (VisionTransformer) and CNN-based architectures (such as ResNet).  
 
 This document outlines:
 
 1. The overall framework structure  
-2. How to extend MyDL for various models (ResNet, YOLO, ViT, etc.)  
+2. How to extend MyDL for various models (ResNet, Transformer, ViT, etc.)  
 3. How to load weights and run inference  
 4. Future plans, including mobile optimization  
 
@@ -23,8 +23,7 @@ This document outlines:
   - [4. Layers: Linear, Conv2d, BatchNorm2d, etc.](#4-layers-linear-conv2d-batchnorm2d-etc)
   - [5. Transformer and VisionTransformer](#5-transformer-and-visiontransformer)
   - [6. ResNet (Example CNN Model)](#6-resnet-example-cnn-model)
-  - [7. YOLO (Example Object Detection Model)](#7-yolo-example-object-detection-model)
-  - [8. Weights Loader](#8-weights-loader)
+  - [7. Weights Loader](#7-weights-loader)
 - [Build and Run Instructions](#build-and-run-instructions)
 - [Example Usage](#example-usage)
 - [Mobile Optimization](#mobile-optimization)
@@ -45,8 +44,7 @@ MyDL/
 │       ├── Linear.h
 │       ├── Transformer.h
 │       ├── VisionTransformer.h
-│       ├── ResNet.h          
-│       ├── Yolo.h               
+│       ├── ResNet.h                       
 │       ├── Conv2d.h             
 │       ├── BatchNorm2d.h        
 │       └── WeightsLoader.h
@@ -57,8 +55,7 @@ MyDL/
 │   ├── Linear.cpp
 │   ├── Transformer.cpp
 │   ├── VisionTransformer.cpp
-│   ├── ResNet.cpp               
-│   ├── Yolo.cpp                 
+│   ├── ResNet.cpp             
 │   ├── Conv2d.cpp               
 │   ├── BatchNorm2d.cpp          
 │   ├── WeightsLoader.cpp
@@ -76,7 +73,6 @@ MyDL/
   - `Transformer.h`: Modules for multi-head attention, feed-forward network, Transformer block/model.  
   - `VisionTransformer.h`: A simplified Vision Transformer (ViT) implementation (input assumed as `[seq_len, embed_dim]`).  
   - `ResNet.h`: Example ResNet model definition.  
-  - `Yolo.h`: Example YOLO model definition.  
   - `WeightsLoader.h`: Loading of pre-trained weights from a file.
 
 - **src/**:  
@@ -180,31 +176,7 @@ ResNet typically consists of:
 
 ---
 
-### 7. YOLO (Example Object Detection Model)
-
-YOLO (**You Only Look Once**) consists of:
-
-1. **Backbone**  
-   - Darknet, CSP, or other CNN-based feature extractor.
-   - Repeated convolutional + downsampling layers.
-2. **Detection Head**  
-   - Outputs:
-     - Bounding box coordinates.
-     - Class probabilities.
-     - Objectness score.
-
-**Implementation in MyDL:**  
-- Define convolutional blocks following YOLO’s structure:
-  - `Conv2d`, `BatchNorm2d`, `LeakyReLU`.
-- Implement a **detection layer** that:
-  - Processes the feature map into bounding box predictions.
-- Handle **post-processing** externally:
-  - **Non-Maximum Suppression (NMS)**.
-  - **Anchor box adjustments**.
-
----
-
-## 8. Weights Loader
+## 7. Weights Loader
 
 ### MyDL::loadWeights
 
@@ -239,43 +211,75 @@ This generates an executable (e.g., `MyDLApp`).
 
 ## Example Usage
 
-A simplified `main.cpp` might demonstrate:
+### 1. **Vision Transformer (ViT) Inference**
 
-1. **Creating a model** (e.g., VisionTransformer, ResNet, YOLO).  
-2. **Loading pre-trained weights** from a file (`"model_weights.bin"`).  
-3. **Preparing a dummy or real input** (e.g., an image tensor).  
-4. **Running inference** (`forward`) and **printing or processing the output**.  
-
-```cpp
-#include "MyDL/Module.h"
-#include "MyDL/VisionTransformer.h"
-#include "MyDL/WeightsLoader.h"
-#include <iostream>
-
-int main() {
-    // 1. Create a VisionTransformer (ViT) instance
-    MyDL::VisionTransformer vit( /* embed_dim, num_heads, etc. */ );
-
-    // 2. Load pre-trained weights
-    MyDL::loadWeights("vit_weights.bin", vit);
-
-    // 3. Prepare input tensor (example: sequence length 4, embedding dim 16)
-    MyDL::Tensor input({4, 16});
-    // ... Fill input data with actual values
-
-    // 4. Run inference
-    MyDL::Tensor output = vit.forward(input);
-
-    // 5. Print results
-    std::cout << "Output size: ";
-    for (auto dim : output.shape()) {
-        std::cout << dim << " ";
-    }
-    std::cout << std::endl;
-
-    return 0;
-}
+#### **Run with default parameters (random weights):**
+```sh
+./MyDLApp --model vit --seq_len 8 --embed_dim 32 --num_classes 10
 ```
+
+#### **Run with pre-trained weights:**
+```sh
+./MyDLApp --model vit --seq_len 8 --embed_dim 32 --num_classes 10 --weights vit_weights.bin
+```
+
+This will:
+- Create a **VisionTransformer** model with 8 patches (`seq_len=8`) and embedding dimension 32.
+- If `--weights vit_weights.bin` is specified, it will load pre-trained weights.
+
+---
+
+### 2. **Transformer Model Inference**
+
+#### **Run Transformer Model with Default Settings:**
+```sh
+./MyDLApp --model transformer --seq_len 16 --embed_dim 64 --num_classes 10
+```
+
+#### **Run Transformer Model with Pre-Trained Weights:**
+```sh
+./MyDLApp --model transformer --seq_len 16 --embed_dim 64 --num_classes 10 --weights transformer_weights.bin
+```
+
+This will:
+- Create a **standard Transformer model** with `seq_len=16` and `embed_dim=64`.
+- If weights are provided, it will load the trained model parameters.
+
+---
+
+### 3. **ResNet Model Inference**
+
+#### **Run ResNet with Default Settings:**
+```sh
+./MyDLApp --model resnet --num_classes 1000
+```
+
+#### **Run ResNet with Pre-Trained Weights:**
+```sh
+./MyDLApp --model resnet --num_classes 1000 --weights resnet_weights.bin
+```
+
+This will:
+- Create a **ResNet** model for 1000-class classification (ImageNet-style).
+- If `--weights resnet_weights.bin` is provided, it will load pre-trained weights.
+
+---
+
+### 4. **Expected Console Output**
+When running MyDL, you will see output similar to:
+
+```sh
+Running MyDL Script with the following configuration:
+  Model Type    : vit
+  Sequence Length: 8
+  Embedding Dim : 32
+  Num Classes   : 10
+  Weights Path  : None (random init)
+
+Inference Output (Logits): 0.23 -1.42 0.58 2.15 ...
+```
+
+If pre-trained weights are loaded, the output should be more meaningful.
 
 ---
 
