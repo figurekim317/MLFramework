@@ -313,7 +313,7 @@ These optimizations usually come after verifying correctness in a single-threade
 
 MyDL offers a simple yet extensible framework for running deep learning inference in C++. By organizing layers as `Module` subclasses, providing a flexible `Tensor` class, and separating basic operations into a `Functional` namespace, it mimics the ease of use of frameworks like PyTorch.
 
-Whether you want to run ResNet, YOLO, or Vision Transformer on desktop or mobile, you can build upon MyDL’s modular structure. As you extend it with new layers, weight loaders, and mobile optimizations (NEON, GPU), MyDL can evolve into a robust solution for real-time on-device inference.
+Whether you want to run ResNet, or Vision Transformer on desktop or mobile, you can build upon MyDL’s modular structure. As you extend it with new layers, weight loaders, and mobile optimizations (NEON, GPU), MyDL can evolve into a robust solution for real-time on-device inference.
 
 Feel free to explore, add new modules, and optimize for specific hardware to make MyDL truly powerful and suitable for production-level applications.
 
